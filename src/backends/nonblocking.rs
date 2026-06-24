@@ -39,7 +39,7 @@ impl Server for Nonblocking {
                     Err(e) => return Err(e),
                 }
             }
-            conns.retain_mut(|c| service(c));
+            conns.retain_mut(service);
         }
         Ok(())
     }

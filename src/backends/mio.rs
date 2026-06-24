@@ -114,10 +114,10 @@ impl MioConn {
                 Ok(true) => {}
             }
         }
-        if event.is_writable() || self.wants_write() {
-            if flush_write(&mut self.stream, &mut self.out).is_err() {
-                return true;
-            }
+        if (event.is_writable() || self.wants_write())
+            && flush_write(&mut self.stream, &mut self.out).is_err()
+        {
+            return true;
         }
         false
     }

@@ -99,10 +99,8 @@ pub fn serve_conn(c: &mut Conn, readable: bool, writable: bool) -> bool {
             Err(_) => return false,
         }
     }
-    if writable || c.wants_write() {
-        if c.on_writable().is_err() {
-            return false;
-        }
+    if (writable || c.wants_write()) && c.on_writable().is_err() {
+        return false;
     }
     true
 }
