@@ -84,6 +84,9 @@ impl Server for Select {
 
             if unsafe { libc::FD_ISSET(listen_fd, &read_set) } {
                 accept_all(&self.listener, &mut conns, self.read_buf)?;
+                // select() cannot represent an fd >= FD_SETSIZE in its bitmap. That hard cap
+                // is this stage's wall: drop the connection rather than corrupt the set.
+                conns.retain(|c| c.fd() < libc::FD_SETSIZE as std::os::fd::RawFd);
             }
         }
         Ok(())

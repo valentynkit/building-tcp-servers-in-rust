@@ -78,8 +78,11 @@ mod epoll {
                     }
                     let keep = match conns.get_mut(&fd) {
                         Some(c) => {
-                            let readable =
-                                ev.events & (libc::EPOLLIN as u32 | libc::EPOLLHUP as u32) != 0;
+                            let readable = ev.events
+                                & (libc::EPOLLIN as u32
+                                    | libc::EPOLLHUP as u32
+                                    | libc::EPOLLERR as u32)
+                                != 0;
                             let writable = ev.events & libc::EPOLLOUT as u32 != 0;
                             serve_conn(c, readable, writable)
                         }
@@ -96,9 +99,13 @@ mod epoll {
                         if want_write {
                             interest |= libc::EPOLLOUT as u32;
                         }
-                        if let Err(e) = ctl(epfd, libc::EPOLL_CTL_MOD, fd, interest) {
-                            loop_err = Some(e);
-                            break;
+                        // A MOD failure means the kernel-side fd is gone;
+                        // drop this connection and continue the loop.
+                        if ctl(epfd, libc::EPOLL_CTL_MOD, fd, interest).is_err() {
+                            unsafe {
+                                libc::epoll_ctl(epfd, libc::EPOLL_CTL_DEL, fd, std::ptr::null_mut())
+                            };
+                            conns.remove(&fd);
                         }
                     }
                 }
@@ -252,9 +259,12 @@ mod kqueue {
                         let _ = change(kq, fd, libc::EVFILT_WRITE, libc::EV_DELETE);
                         conns.remove(&fd);
                     } else if conns[&fd].wants_write() {
-                        if let Err(e) = change(kq, fd, libc::EVFILT_WRITE, libc::EV_ADD) {
-                            loop_err = Some(e);
-                            break;
+                        // An EV_ADD failure means the fd is already gone;
+                        // drop this connection and continue the loop.
+                        if change(kq, fd, libc::EVFILT_WRITE, libc::EV_ADD).is_err() {
+                            let _ = change(kq, fd, libc::EVFILT_READ, libc::EV_DELETE);
+                            let _ = change(kq, fd, libc::EVFILT_WRITE, libc::EV_DELETE);
+                            conns.remove(&fd);
                         }
                     } else {
                         // Drop the write filter when the queue drains. EV_DELETE

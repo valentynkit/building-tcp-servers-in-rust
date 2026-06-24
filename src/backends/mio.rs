@@ -77,7 +77,18 @@ impl Server for Mio {
                             } else {
                                 Interest::READABLE
                             };
-                            poll.registry().reregister(&mut c.stream, token, interest)?;
+                            // A failed reregister means the kernel side is
+                            // already gone; drop the connection and continue
+                            // rather than bringing the whole server down.
+                            if poll
+                                .registry()
+                                .reregister(&mut c.stream, token, interest)
+                                .is_err()
+                            {
+                                if let Some(mut c) = conns.remove(&token) {
+                                    let _ = poll.registry().deregister(&mut c.stream);
+                                }
+                            }
                         }
                     }
                 }

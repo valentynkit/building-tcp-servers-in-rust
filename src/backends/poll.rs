@@ -68,7 +68,8 @@ impl Server for Poll {
             conns.retain_mut(|c| {
                 let revents = fds[i + 1].revents;
                 i += 1;
-                let readable = revents & (libc::POLLIN | libc::POLLHUP) != 0;
+                let readable =
+                    revents & (libc::POLLIN | libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0;
                 let writable = revents & libc::POLLOUT != 0;
                 serve_conn(c, readable, writable)
             });
