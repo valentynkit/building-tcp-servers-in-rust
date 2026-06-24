@@ -139,3 +139,5 @@ macro_rules! backend_suite {
 backend_suite!(blocking, Blocking);
 backend_suite!(nonblocking, Nonblocking);
 backend_suite!(select, Select);
+backend_suite!(poll, Poll);
+backend_suite!(eventloop, EventLoop);
