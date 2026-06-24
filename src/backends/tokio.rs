@@ -21,7 +21,9 @@ impl Server for Tokio {
     }
 
     fn local_addr(&self) -> SocketAddr {
-        self.listener.local_addr().expect("a bound listener has an address")
+        self.listener
+            .local_addr()
+            .expect("a bound listener has an address")
     }
 
     fn serve(self, shutdown: ShutdownSignal) -> io::Result<()> {
