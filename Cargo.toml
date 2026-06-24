@@ -1,0 +1,21 @@
+[package]
+name = "building-tcp-servers-in-rust"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.66"
+description = "One TCP echo server, built seven times, from a blocking socket to an async runtime."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/valentynkit/building-tcp-servers-in-rust"
+
+[lib]
+name = "building_tcp_servers_in_rust"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tcp-server"
+path = "src/main.rs"
+
+[dependencies]
+libc = "0.2"
+mio = { version = "1", features = ["os-poll", "net"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "io-util", "time"] }
