@@ -141,3 +141,5 @@ backend_suite!(nonblocking, Nonblocking);
 backend_suite!(select, Select);
 backend_suite!(poll, Poll);
 backend_suite!(eventloop, EventLoop);
+backend_suite!(mio, Mio);
+backend_suite!(tokio, Tokio);
